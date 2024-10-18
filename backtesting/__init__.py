@@ -1,1 +1,1 @@
-# Init file for backtesting module
+from .backtesting import Backtester

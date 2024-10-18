@@ -1,1 +1,1 @@
-# Init file for models module
+from .models import LSTMModel, TransformerModel

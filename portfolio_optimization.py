@@ -1,5 +1,6 @@
 import numpy as np
 import cvxpy as cp
+import pandas as pd
 
 class PortfolioOptimizer:
     def __init__(self):

@@ -44,4 +44,3 @@ class TransformerModel:
         self.stock_data = stock_data
         # Implementa un modello Transformer o un altro tipo di modello avanzato
         pass
-

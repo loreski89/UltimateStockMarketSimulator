@@ -17,7 +17,7 @@ The **Ultimate Stock Market Simulator** is a comprehensive tool built for invest
 
 1. Clone this repository: 
    ```bash
-   git clone https://github.com/lorenzoschivo/UltimateStockMarketSimulator.git
+   git clone https://github.com/loreski89/UltimateStockMarketSimulator.git
    ```
 2. Install the required Python packages:
    ```bash

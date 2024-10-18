@@ -1,57 +1,62 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-import yfinance as yf
-import plotly.graph_objs as go
+import pandas as pd
+from models import LSTMModel
+from data_acquisition import fetch_stock_data
 
-# Inizializzazione dell'app Dash
 app = dash.Dash(__name__)
 
-# Layout della dashboard
 app.layout = html.Div([
-    html.H1("Ultimate Stock Market Simulator"),
-    
-    # Campo di input per il simbolo del titolo
-    html.Div([
-        html.Label("Inserisci il simbolo del titolo azionario:"),
-        dcc.Input(id='input-symbol', type='text', value='AAPL'),  # Simbolo di default: AAPL
-        html.Button(id='submit-button', n_clicks=0, children='Analizza')
-    ]),
-    
-    # Grafico del prezzo delle azioni
-    dcc.Graph(id='stock-graph')
+    html.H1('Ultimate Stock Market Simulator'),
+    dcc.Input(id='ticker-input', value='AAPL', type='text', placeholder="Inserisci il simbolo dell'azione"),
+    dcc.Dropdown(
+        id='projection-range',
+        options=[
+            {'label': '1 mese', 'value': '1M'},
+            {'label': '6 mesi', 'value': '6M'},
+            {'label': '1 anno', 'value': '1Y'},
+            {'label': '5 anni', 'value': '5Y'},
+            {'label': '10 anni', 'value': '10Y'},
+        ],
+        value='1M'
+    ),
+    html.Button('Simula', id='simulate-button'),
+    dcc.Graph(id='prediction-graph')
 ])
 
-# Callback per aggiornare il grafico in base al simbolo inserito
 @app.callback(
-    Output('stock-graph', 'figure'),
-    Input('submit-button', 'n_clicks'),
-    Input('input-symbol', 'value')
+    Output('prediction-graph', 'figure'),
+    [Input('simulate-button', 'n_clicks'), Input('ticker-input', 'value'), Input('projection-range', 'value')]
 )
-def update_graph(n_clicks, input_symbol):
-    # Scarica i dati storici per il simbolo inserito
-    stock_data = yf.download(input_symbol, period='1y')
+def update_graph(n_clicks, ticker, projection_range):
+    if n_clicks is None:
+        return {}
     
-    # Crea il grafico del prezzo
-    figure = {
+    # Ottieni i dati storici
+    data = fetch_stock_data(ticker)
+    
+    # Prepara i dati e addestra il modello LSTM
+    lstm_model = LSTMModel(data)
+    scaled_data = lstm_model.preprocess_data()
+    X_train, y_train = lstm_model.create_sequences(scaled_data)
+    lstm_model.build_model()
+    lstm_model.train_model(X_train, y_train)
+    
+    # Prevedi il futuro basato sul range selezionato
+    predictions = lstm_model.predict_future(X_train[-60:])  # Prevedi 60 giorni futuri
+    
+    # Crea il grafico delle previsioni
+    fig = {
         'data': [
-            go.Candlestick(
-                x=stock_data.index,
-                open=stock_data['Open'],
-                high=stock_data['High'],
-                low=stock_data['Low'],
-                close=stock_data['Close'],
-                name=input_symbol
-            )
+            {'x': data.index, 'y': data['Close'], 'type': 'line', 'name': 'Prezzo Storico'},
+            {'x': pd.date_range(start=data.index[-1], periods=60, freq='D'), 'y': predictions.flatten(), 'type': 'line', 'name': 'Previsioni'}
         ],
-        'layout': go.Layout(
-            title=f'Prezzo Storico di {input_symbol}',
-            xaxis={'title': 'Data'},
-            yaxis={'title': 'Prezzo'},
-        )
+        'layout': {
+            'title': f'Previsioni per {ticker}'
+        }
     }
-    return figure
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-

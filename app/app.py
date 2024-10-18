@@ -1,45 +1,57 @@
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output
-import plotly.express as px
-import pandas as pd
-import numpy as np
+import yfinance as yf
+import plotly.graph_objs as go
 
-# Initialize the Dash app
+# Inizializzazione dell'app Dash
 app = dash.Dash(__name__)
 
-# Load and prepare data (this is an example using random data for a stock simulator)
-np.random.seed(42)
-dates = pd.date_range(start="2020-01-01", periods=200)
-prices = np.cumsum(np.random.randn(200)) + 100
-
-df = pd.DataFrame({"Date": dates, "Price": prices})
-
-# Define the layout of the dashboard
+# Layout della dashboard
 app.layout = html.Div([
     html.H1("Ultimate Stock Market Simulator"),
-    dcc.Graph(id="price-chart"),
-    dcc.Slider(
-        id="range-slider",
-        min=0,
-        max=len(df) - 1,
-        value=len(df) - 1,
-        marks={i: str(df["Date"].iloc[i].strftime('%Y-%m-%d')) for i in range(0, len(df), 20)},
-        step=None
-    ),
-    html.Div(id="output-range-slider")
+    
+    # Campo di input per il simbolo del titolo
+    html.Div([
+        html.Label("Inserisci il simbolo del titolo azionario:"),
+        dcc.Input(id='input-symbol', type='text', value='AAPL'),  # Simbolo di default: AAPL
+        html.Button(id='submit-button', n_clicks=0, children='Analizza')
+    ]),
+    
+    # Grafico del prezzo delle azioni
+    dcc.Graph(id='stock-graph')
 ])
 
-# Callback to update the graph based on slider input
+# Callback per aggiornare il grafico in base al simbolo inserito
 @app.callback(
-    Output("price-chart", "figure"),
-    [Input("range-slider", "value")]
+    Output('stock-graph', 'figure'),
+    Input('submit-button', 'n_clicks'),
+    Input('input-symbol', 'value')
 )
-def update_graph(value):
-    fig = px.line(df.iloc[:value+1], x="Date", y="Price", title="Simulated Stock Prices")
-    return fig
+def update_graph(n_clicks, input_symbol):
+    # Scarica i dati storici per il simbolo inserito
+    stock_data = yf.download(input_symbol, period='1y')
+    
+    # Crea il grafico del prezzo
+    figure = {
+        'data': [
+            go.Candlestick(
+                x=stock_data.index,
+                open=stock_data['Open'],
+                high=stock_data['High'],
+                low=stock_data['Low'],
+                close=stock_data['Close'],
+                name=input_symbol
+            )
+        ],
+        'layout': go.Layout(
+            title=f'Prezzo Storico di {input_symbol}',
+            xaxis={'title': 'Data'},
+            yaxis={'title': 'Prezzo'},
+        )
+    }
+    return figure
 
-# Run the app
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run_server(debug=True)
-# Main application logic for the dashboard
+

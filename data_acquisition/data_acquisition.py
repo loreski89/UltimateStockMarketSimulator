@@ -1,26 +1,21 @@
 import pandas as pd
-import numpy as np
+import yfinance as yf
 
 def fetch_stock_data(ticker):
-    # Simulazione per esempio, puoi sostituirlo con yfinance o un'API reale
-    dates = pd.date_range(start='2015-01-01', periods=200)
-    prices = np.random.randn(200).cumsum() + 100  # Genera prezzi casuali
-    data = pd.DataFrame(data={'Close': prices}, index=dates)
-    return data
+    stock_data = yf.download(ticker, period="max")
+    return stock_data
 
 def fetch_macro_data():
-    # Simula i dati macroeconomici (inflazione, tassi di interesse, ecc.)
-    macro_data = {
+    # Aggiungi logica per acquisire dati macroeconomici
+    return {
         'inflation': 2.5,
-        'interest_rates': 1.75
+        'interest_rates': 1.5
     }
-    return macro_data
 
 def fetch_sentiment_data(ticker):
-    # Simula i dati di sentiment
-    sentiment_data = {
-        'average_sentiment': 0.5,
-        'positive': 60,
-        'negative': 40
+    # Aggiungi logica per acquisire dati di sentiment
+    return {
+        'average_sentiment': 0.6,
+        'positive': 70,
+        'negative': 30
     }
-    return sentiment_data

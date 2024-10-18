@@ -41,7 +41,6 @@ app.layout = html.Div([
         options=[
             {'label': 'LSTM', 'value': 'LSTM'},
             {'label': 'Transformer', 'value': 'Transformer'},
-            {'label': 'Random Forest', 'value': 'RF'},
         ],
         value='LSTM',
         style={'width': '200px'}
@@ -81,8 +80,6 @@ def update_graph(n_clicks, ticker, projection_range, model_type):
         model = LSTMModel(stock_data)
     elif model_type == 'Transformer':
         model = TransformerModel(stock_data)
-    else:
-        model = RandomForestModel(stock_data)
     
     # Preprocessamento e addestramento del modello
     model.preprocess_data(macro_data, sentiment_data)
@@ -90,13 +87,27 @@ def update_graph(n_clicks, ticker, projection_range, model_type):
     model.build_model()
     model.train_model(X_train, y_train)
 
-    # Previsione dei prezzi futuri
-    predictions = model.predict_future(projection_range)
+    # Determina il numero di giorni per la proiezione in base all'intervallo selezionato
+    if projection_range == '1M':
+        projection_days = 30
+    elif projection_range == '6M':
+        projection_days = 180
+    elif projection_range == '1Y':
+        projection_days = 365
+    elif projection_range == '5Y':
+        projection_days = 1825
+    elif projection_range == '10Y':
+        projection_days = 3650
+    else:
+        projection_days = 30  # Valore predefinito
+
+    # Previsione dei prezzi futuri con il parametro projection_days
+    predictions = model.predict_future(projection_days)
     
     # Crea il grafico con i dati storici e le previsioni
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=stock_data.index, y=stock_data['Close'], mode='lines', name='Prezzo Storico'))
-    future_dates = pd.date_range(start=stock_data.index[-1], periods=len(predictions), freq='D')
+    future_dates = pd.date_range(start=stock_data.index[-1], periods=projection_days, freq='D')
     fig.add_trace(go.Scatter(x=future_dates, y=predictions.flatten(), mode='lines', name='Previsioni'))
     fig.update_layout(title=f'Previsioni per {ticker} con modello {model_type}')
     
@@ -115,7 +126,11 @@ def update_backtest(n_clicks, ticker):
     stock_data = fetch_stock_data(ticker)
     backtester = Backtester(stock_data)
     results = backtester.run_backtest()
-    
+
+    # Verifica se `results` è vuoto o nullo
+    if results is None or results.empty:
+        return {}  # Ritorna un grafico vuoto se non ci sono dati
+
     # Crea il grafico dei risultati del backtest
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=results.index, y=results['Portfolio Value'], mode='lines', name='Valore del Portafoglio'))
@@ -132,9 +147,12 @@ def update_portfolio_optimization(n_clicks):
     if n_clicks == 0:
         return {}
 
+    # Ottieni i dati storici delle azioni
+    stock_data = fetch_stock_data('AAPL')
+
     # Esegui l'ottimizzazione del portafoglio
     optimizer = PortfolioOptimizer()
-    portfolio = optimizer.optimize()
+    portfolio = optimizer.optimize(stock_data)
 
     # Crea il grafico dell'ottimizzazione del portafoglio
     fig = go.Figure()

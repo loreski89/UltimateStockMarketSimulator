@@ -6,7 +6,7 @@ class Backtester:
         self.stock_data = stock_data
         self.initial_capital = 100000  # Capitale iniziale
         self.results = None
-
+    
     def run_backtest(self):
         # Simulazione di strategia semplice (es. media mobile)
         short_window = 40
@@ -27,9 +27,3 @@ class Backtester:
         portfolio['cash'] = self.initial_capital - (positions.diff().multiply(self.stock_data['Close'], axis=0)).sum(axis=1).cumsum()
         portfolio['total'] = portfolio['cash'] + portfolio['holdings']
         portfolio['returns'] = portfolio['total'].pct_change()
-        
-        # Aggiungere la colonna 'Portfolio Value'
-        portfolio['Portfolio Value'] = portfolio['total']
-
-        self.results = portfolio
-        return portfolio

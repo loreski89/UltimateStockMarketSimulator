@@ -6,8 +6,7 @@ class PortfolioOptimizer:
     def __init__(self):
         self.asset_weights = None
 
-    def optimize(self, expected_returns=None, cov_matrix=None, risk_free_rate=0.01):
-        # Ottimizzazione del portafoglio (es. Mean-Variance Optimization)
+    def optimize(self, expected_returns, cov_matrix, risk_free_rate=0.01):
         n = len(expected_returns)
         w = cp.Variable(n)
         portfolio_return = expected_returns @ w

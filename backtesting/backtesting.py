@@ -6,9 +6,9 @@ class Backtester:
         self.stock_data = stock_data
         self.initial_capital = 100000  # Capitale iniziale
         self.results = None
-    
+
     def run_backtest(self):
-        # Simulazione di una semplice strategia di media mobile
+        # Simulazione di strategia semplice (es. media mobile)
         short_window = 40
         long_window = 100
         
@@ -19,7 +19,7 @@ class Backtester:
         signals['signal'][short_window:] = np.where(signals['short_mavg'][short_window:] > signals['long_mavg'][short_window:], 1.0, 0.0)
         signals['positions'] = signals['signal'].diff()
 
-        # Simulazione del portafoglio
+        # Simulazione portafoglio
         positions = pd.DataFrame(index=signals.index).fillna(0.0)
         positions['stock'] = signals['signal']
         portfolio = positions.multiply(self.stock_data['Close'], axis=0)
@@ -28,5 +28,8 @@ class Backtester:
         portfolio['total'] = portfolio['cash'] + portfolio['holdings']
         portfolio['returns'] = portfolio['total'].pct_change()
         
+        # Aggiungere la colonna 'Portfolio Value'
+        portfolio['Portfolio Value'] = portfolio['total']
+
         self.results = portfolio
         return portfolio

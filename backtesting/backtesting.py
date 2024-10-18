@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 class Backtester:
     def __init__(self, stock_data):

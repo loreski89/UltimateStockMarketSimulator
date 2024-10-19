@@ -37,15 +37,12 @@ class LSTMModel:
         X_train = np.expand_dims(X_train, axis=-1)  # Aggiungi dimensione per LSTM
         self.model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
 
-    def predict_future(self, projection_range):
+    def predict_future(self, projection_days):
         # Previsione dei prezzi futuri
-        projection_days = {'1M': 30, '6M': 180, '1Y': 365, '5Y': 5*365, '10Y': 10*365}
-        future_days = projection_days.get(projection_range, 30)  # Default: 30 giorni
         future_predictions = []
-        
         last_data = np.expand_dims(self.stock_data['Normalized'].values[-50:], axis=0)
 
-        for _ in range(future_days):
+        for _ in range(projection_days):
             next_prediction = self.model.predict(last_data)
             future_predictions.append(next_prediction[0, 0])
             last_data = np.roll(last_data, -1, axis=1)
@@ -89,15 +86,12 @@ class TransformerModel:
         X_train = np.expand_dims(X_train, axis=-1)  # Aggiungi dimensione per il Transformer
         self.model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size)
 
-    def predict_future(self, projection_range):
+    def predict_future(self, projection_days):
         # Previsione dei prezzi futuri
-        projection_days = {'1M': 30, '6M': 180, '1Y': 365, '5Y': 5*365, '10Y': 10*365}
-        future_days = projection_days.get(projection_range, 30)  # Default: 30 giorni
         future_predictions = []
-        
         last_data = np.expand_dims(self.stock_data['Normalized'].values[-50:], axis=0)
 
-        for _ in range(future_days):
+        for _ in range(projection_days):
             next_prediction = self.model.predict(last_data)
             future_predictions.append(next_prediction[0, 0])
             last_data = np.roll(last_data, -1, axis=1)
